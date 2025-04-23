@@ -1,8 +1,11 @@
-DUT = alu
+DUT = top
 CSRC += ./csrc/tb_$(DUT).cpp
-VSRC += ./vsrc/$(DUT).sv
+VSRC += ./vsrc/$(DUT).v
 
 all: sim wave
+
+compile:
+	verilator --cc $(VSRC) --Mdir build
 
 sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!

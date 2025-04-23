@@ -1,5 +1,6 @@
-#include "Valu.h"
-#include "Valu___024unit.h"
+#include "Vtop.h"
+#include "Vtop___024root.h"
+#include <cstdlib>
 #include <iostream>
 #include <stdlib.h>
 #include <verilated.h>
@@ -9,7 +10,7 @@
 vluint64_t sim_time = 0;
 
 int main(int argc, char **argv, char **env) {
-    Valu *dut = new Valu;
+    Vtop *dut = new Vtop;
 
     Verilated::traceEverOn(true);
     VerilatedVcdC *m_trace = new VerilatedVcdC;
@@ -17,8 +18,16 @@ int main(int argc, char **argv, char **env) {
     m_trace->open("./build/waveform.vcd");
 
     while (sim_time < MAX_SIM_TIME) {
-        dut->clk ^= 1;
+        int a = rand() & 1;
+        int b = rand() & 1;
+
+        dut->a = a;
+        dut->b = b;
         dut->eval();
+
+        printf("a = %d, b = %d, f = %d", a, b, dut->f);
+        assert(dut->f == (a ^ b));
+
         m_trace->dump(sim_time);
         sim_time++;
     }
