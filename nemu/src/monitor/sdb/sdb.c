@@ -19,6 +19,8 @@
 #include <isa.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdlib.h>
+#include <string.h>
 
 static int is_batch_mode = false;
 
@@ -55,6 +57,24 @@ static int cmd_q(char *args) {
     return -1;
 }
 
+static int cmd_si(char *args) {
+    int N;
+
+    char *arg = strtok(args, " ");
+    char *arg2 = strtok(NULL, " ");
+
+    if (arg2 != NULL) {
+        printf("Too much args.\n");
+    } else if (arg == NULL) {
+        cpu_exec(-1);
+    } else {
+        N = atoi(arg);
+        cpu_exec(N);
+    }
+
+    return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -67,7 +87,9 @@ static struct {
     {"q", "Exit NEMU", cmd_q},
 
     /* TODO: Add more commands */
-
+    {"si [N]", "Step program until it reaches a different source line.\n\
+         Argument N means step N times (or till program stops for another reason).",
+     cmd_si},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
@@ -127,7 +149,12 @@ void sdb_mainloop() {
 
         int i;
         for (i = 0; i < NR_CMD; i++) {
-            if (strcmp(cmd, cmd_table[i].name) == 0) {
+            // si等命令的name后有参数，需要单独将name提取出来
+            char *cmd_name;
+            strcpy(cmd_name, cmd_table[i].name);
+            cmd_name = strtok(cmd_name, " ");
+
+            if (strcmp(cmd, cmd_name) == 0) {
                 if (cmd_table[i].handler(args) < 0) {
                     return;
                 }
