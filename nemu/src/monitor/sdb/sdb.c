@@ -118,6 +118,17 @@ static int cmd_x(char *args) {
     return 0;
 }
 
+static int cmd_p(char *args) {
+    if (args == NULL) {
+        printf("Missing arg\n");
+    } else {
+        bool success;
+        expr(args, &success);
+    }
+
+    return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -138,6 +149,7 @@ static struct {
     {"x N EXPR", "求出表达式EXPR的值, 将结果作为起始内存地址, \
                 以十六进制形式输出连续的N个4字节",
      cmd_x},
+    {"p EXPR", "求出表达式EXPR的值", cmd_p},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
