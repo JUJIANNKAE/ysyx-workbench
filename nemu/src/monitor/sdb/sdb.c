@@ -14,9 +14,11 @@
  ***************************************************************************************/
 
 #include "sdb.h"
+#include "common.h"
 #include "utils.h"
 #include <cpu/cpu.h>
 #include <isa.h>
+#include <memory/vaddr.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdio.h>
@@ -91,6 +93,31 @@ static int cmd_info(char *args) {
     return 0;
 }
 
+static int cmd_x(char *args) {
+    char *arg = strtok(args, " ");
+    char *arg2 = strtok(NULL, " ");
+    char *arg3 = strtok(NULL, " ");
+
+    if (arg3 != NULL) {
+        printf("Too much args.\n");
+    } else if (arg == NULL || arg2 == NULL) {
+        printf("Missing arg\n");
+    } else {
+        int N = atoi(arg);
+        paddr_t base_addr = strtol(arg2, NULL, 16);
+        word_t data = 0;
+        paddr_t addr = base_addr;
+
+        for (int i = 0; i < N; i++) {
+            data = vaddr_read(addr, 4);
+            printf("%#010x\n", data);
+            addr += 4;
+        }
+    }
+
+    return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -108,6 +135,9 @@ static struct {
      cmd_si},
     {"info SUBCMD", "Print register status and monitoring point information",
      cmd_info},
+    {"x N EXPR", "求出表达式EXPR的值, 将结果作为起始内存地址, \
+                以十六进制形式输出连续的N个4字节",
+     cmd_x},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
