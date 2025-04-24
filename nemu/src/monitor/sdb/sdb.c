@@ -19,6 +19,7 @@
 #include <isa.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -75,6 +76,21 @@ static int cmd_si(char *args) {
     return 0;
 }
 
+static int cmd_info(char *args) {
+    char *arg = strtok(args, " ");
+    char *arg2 = strtok(NULL, " ");
+
+    if (arg2 != NULL) {
+        printf("Too much args.\n");
+    } else if (arg == NULL) {
+        printf("Missing arg\n");
+    } else if (strcmp(arg, "r") == 0) {
+        isa_reg_display();
+    }
+
+    return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -90,6 +106,8 @@ static struct {
     {"si [N]", "Step program until it reaches a different source line.\n\
          Argument N means step N times (or till program stops for another reason).",
      cmd_si},
+    {"info SUBCMD", "Print register status and monitoring point information",
+     cmd_info},
 };
 
 #define NR_CMD ARRLEN(cmd_table)
