@@ -1,9 +1,10 @@
 module top (
-    input  wire a,
-    input  wire b,
-    output wire f
+    input  wire       clk,
+    input  wire       rst,
+    input  wire [1:0] sw,
+    output wire       ledr
 );
 
-    assign f = a ^ b;
+    assign ledr = sw[0] ^ sw[1];
 
 endmodule

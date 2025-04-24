@@ -6,9 +6,11 @@
 !*.[cSh]
 !*.v
 !*.sv
+!*.nxdc
 !*.cc
 !*.cpp
 !.clangd
+!.clang-format
 !.gitignore
 !README.md
 build/
