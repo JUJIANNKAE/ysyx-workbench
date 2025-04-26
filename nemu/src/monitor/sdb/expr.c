@@ -14,8 +14,10 @@
  ***************************************************************************************/
 
 #include "common.h"
+#include <assert.h>
 #include <isa.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -136,15 +138,18 @@ static bool make_token(char *e) {
 bool check_parenthese(int p, int q) {
     int num_left = 0;
 
-    if ((strcmp(tokens[p].str, "(") != 0) ||
-        (strcmp(tokens[q].str, ")") != 0)) {
+    if ((strcmp(tokens[p].str, "(") == 0) ||
+        (strcmp(tokens[q].str, ")") == 0)) {
         for (int i = p; i <= q; i++) {
-            printf("num_left=%d\n", num_left);
-
             if (strcmp(tokens[i].str, "(") == 0) {
                 num_left++;
             } else if (strcmp(tokens[i].str, ")") == 0) {
                 num_left--;
+                if (num_left == 0) {
+                    // 如果是q之前就到达num_left==0
+                    // 说明开头的"("不是与最后的")"配对的
+                    return i == q;
+                }
             }
         }
     } else {
@@ -155,6 +160,49 @@ bool check_parenthese(int p, int q) {
         return true;
     } else {
         return false;
+    }
+}
+
+word_t find_op(int p, int q) {
+    int num_left = 0;
+    int low_op = 0; // 最低优先级
+    int tmp_op = 0; // 当前op的优先级
+    word_t pos = 0;
+
+    for (int i = p; i <= q; i++) {
+        if (tokens[i].type == TK_NUM) {
+            continue;
+        } else if (tokens[i].type == '(') {
+            num_left++;
+        } else if (tokens[i].type == ')') {
+            if (num_left == 0) {
+                return -1;
+            } else {
+                num_left--;
+            }
+        } else if (num_left != 0) {
+            continue;
+        } else if (tokens[i].type == '+' || tokens[i].type == '-') {
+            tmp_op = 2;
+
+            if (tmp_op >= low_op) {
+                low_op = tmp_op;
+                pos = i;
+            }
+        } else if (tokens[i].type == '*' || tokens[i].type == '/') {
+            tmp_op = 1;
+
+            if (tmp_op >= low_op) {
+                low_op = tmp_op;
+                pos = i;
+            }
+        }
+    }
+
+    if (num_left > 0) {
+        return -1;
+    } else {
+        return pos;
     }
 }
 
@@ -175,7 +223,23 @@ word_t eval(int p, int q, bool *success) {
         *success = true;
         return eval(p + 1, q - 1, success);
     } else {
-        // *success = false;
+        word_t op = find_op(p, q);
+        word_t val1 = eval(p, op - 1, success);
+        word_t val2 = eval(op + 1, q, success);
+
+        switch (tokens[op].type) {
+        case '+':
+            return val1 + val2;
+        case '-':
+            return val1 - val2;
+        case '*':
+            return val1 * val2;
+        case '/':
+            return val1 / val2;
+        default:
+            *success = false;
+            assert(0);
+        }
         return 0;
     }
 
@@ -189,7 +253,59 @@ word_t expr(char *e, bool *success) {
     }
 
     /* TODO: Insert codes to evaluate the expression. */
-    eval(0, nr_token, success);
+    word_t ret = 0;
+    ret = eval(0, nr_token - 1, success);
 
-    return 0;
+    return ret;
+}
+
+char *test_buf;
+static int index_buf = 0;
+
+static uint32_t choose(uint32_t n) {
+    // 生成一个小于n的随机数
+    uint32_t ret = rand() % n;
+
+    return ret;
+}
+
+static void gen(char c) {
+    test_buf[index_buf] = c;
+    index_buf++;
+}
+
+static void gen_num() {
+    char str[128];
+    uint32_t num = rand() % 100;
+
+    sprintf(str, "%d", num);
+
+    strncpy(test_buf + index_buf, str, strlen(str));
+    index_buf += strlen(str);
+}
+
+static void gen_rand_op() {
+    char ops[4] = {'+', '-', '*', '/'};
+    int index = choose(4);
+
+    test_buf[index_buf] = ops[index];
+    index_buf++;
+}
+
+void gen_rand_expr() {
+    switch (choose(3)) {
+    case 0:
+        gen_num();
+        break;
+    case 1:
+        gen('(');
+        gen_rand_expr();
+        gen(')');
+        break;
+    default:
+        gen_rand_expr();
+        gen_rand_op();
+        gen_rand_expr();
+        break;
+    }
 }

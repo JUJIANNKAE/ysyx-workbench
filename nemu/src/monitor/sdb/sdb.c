@@ -123,7 +123,8 @@ static int cmd_p(char *args) {
         printf("Missing arg\n");
     } else {
         bool success;
-        expr(args, &success);
+        word_t ret = expr(args, &success);
+        printf("%d\n", ret);
     }
 
     return 0;
